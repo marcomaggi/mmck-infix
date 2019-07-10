@@ -44,6 +44,7 @@
 	  (only (chicken module)
 		reexport))
   (reexport (only (chicken base)
+		  assert
 		  case-lambda
 		  current-error-port
 		  error

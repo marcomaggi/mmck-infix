@@ -31,6 +31,7 @@
 ;;;; units and module header
 
 (declare (unit mmck.infix)
+	 (uses mmck.infix.funcs)
 	 (uses mmck.infix.core)
 	 (uses mmck.infix.version)
 	 (emit-import-library mmck.infix))
@@ -38,6 +39,7 @@
 (module (mmck.infix)
     ()
   (import (only (chicken module) reexport))
+  (reexport (mmck.infix.funcs))
   (reexport (mmck.infix.core))
   (reexport (mmck.infix.version))
   #| end of module |# )

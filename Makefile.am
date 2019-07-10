@@ -45,7 +45,7 @@ MMCK_INFIX_IMPORT_SHARED_LIBS	=
 #
 MMCK_INFIX_RUNTIME_SHARED_LIBS	= \
 	lib/mmck.infix.$(MMCK_SOEXT)		\
-	lib/mmck.coops.helpers.$(MMCK_SOEXT)
+	lib/mmck.infix.helpers.$(MMCK_SOEXT)
 
 # Temporary  files  we need  for  parallel  builds, ".temp",  ".lock",
 # ".stamp".
@@ -173,6 +173,56 @@ lib/mmck.infix.helpers.$(MMCK_SOEXT): lib/mmck.infix.helpers.$(OBJEXT)
 	$(MMCK_LIB_ENV) $(CSC_LINK_LIBRARY) $(@) $(^)
 
 
+#### library (mmck infix): module funcs
+
+MMCK_INFIX_MODULES		+= lib/mmck.infix.funcs.scm
+MMCK_INFIX_RUNTIME_OBJECTS	+= lib/mmck.infix.funcs.$(OBJEXT)
+MMCK_INFIX_IMPORT_SOURCES	+= lib/mmck.infix.funcs.import.scm
+MMCK_INFIX_IMPORT_DEPS		+= lib/mmck.infix.funcs.import.$(MMCK_SOEXT)
+MMCK_INFIX_IMPORT_SHARED_LIBS	+= lib/mmck.infix.funcs.import.$(MMCK_SOEXT)
+MMCK_INFIX_TEMP_FILES		+= \
+	lib/mmck.infix.funcs.temp				\
+	lib/mmck.infix.funcs.lock				\
+	lib/mmck.infix.funcs.stamp
+
+MMCK_INFIX_FUNCS_DEPS = \
+	lib/mmck.infix.helpers.import.$(MMCK_SOEXT)		\
+	$(MMCK_OBJECTS_DEPS)					\
+	\
+	lib/mmck.infix.helpers.$(MMCK_SOEXT)
+
+lib/mmck.infix.funcs.stamp: lib/mmck.infix.funcs.scm $(MMCK_INFIX_FUNCS_DEPS)
+	@rm -f lib/mmck.infix.funcs.temp
+	@touch lib/mmck.infix.funcs.temp
+	$(MMCK_LIB_ENV) $(CSC_COMPILE_OBJECT_SHARED) lib/mmck.infix.funcs.$(OBJEXT) $(<)
+	@$(MV) mmck.infix.funcs.import.scm lib/mmck.infix.funcs.import.scm
+	@mv -f lib/mmck.infix.funcs.temp $@
+
+lib/mmck.infix.funcs.import.scm lib/mmck.infix.funcs.$(OBJEXT): lib/mmck.infix.funcs.stamp
+	@dry=; for f in x $$MAKEFLAGS; do \
+	  case $$f in \
+	    *=*|--*);; \
+	    *n*) dry=:;; \
+	  esac; \
+	done; \
+	if test -f $@; then :; else \
+	  $$dry trap 'rm -rf lib/mmck.infix.funcs.lock lib/mmck.infix.funcs.stamp' 1 2 13 15; \
+	  if $$dry mkdir lib/mmck.infix.funcs.lock 2>/dev/null; then \
+	    $$dry rm -f lib/mmck.infix.funcs.stamp; \
+	    $(MAKE) $(AM_MAKEFLAGS) lib/mmck.infix.funcs.stamp; \
+	    $$dry rmdir lib/mmck.infix.funcs.lock; \
+	  else \
+	    while test -d lib/mmck.infix.funcs.lock && test -z "$$dry"; do \
+	      sleep 1; \
+	    done; \
+	    $$dry test -f lib/mmck.infix.funcs.stamp; exit $$?; \
+	  fi; \
+	fi
+
+lib/mmck.infix.funcs.import.$(MMCK_SOEXT): lib/mmck.infix.funcs.import.scm
+	$(MMCK_LIB_ENV) $(CSC_COMPILE_LIBRARY) $(@) $(<)
+
+
 #### library (mmck infix): module core
 
 MMCK_INFIX_MODULES		+= lib/mmck.infix.core.scm
@@ -187,7 +237,10 @@ MMCK_INFIX_TEMP_FILES		+= \
 
 MMCK_INFIX_CORE_DEPS = \
 	lib/mmck.infix.helpers.import.$(MMCK_SOEXT)		\
-	$(MMCK_OBJECTS_DEPS)
+	lib/mmck.infix.funcs.import.$(MMCK_SOEXT)		\
+	$(MMCK_OBJECTS_DEPS)					\
+	\
+	lib/mmck.infix.helpers.$(MMCK_SOEXT)
 
 lib/mmck.infix.core.stamp: lib/mmck.infix.core.scm $(MMCK_INFIX_CORE_DEPS)
 	@rm -f lib/mmck.infix.core.temp
@@ -219,6 +272,7 @@ lib/mmck.infix.core.import.scm lib/mmck.infix.core.$(OBJEXT): lib/mmck.infix.cor
 
 lib/mmck.infix.core.import.$(MMCK_SOEXT): lib/mmck.infix.core.import.scm
 	$(MMCK_LIB_ENV) $(CSC_COMPILE_LIBRARY) $(@) $(<)
+
 
 
 #### library (mmck infix): main module
