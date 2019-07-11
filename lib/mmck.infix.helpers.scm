@@ -39,6 +39,9 @@
      (syntax: internal-body)
      (syntax: define-auxiliary-syntaxes)
 
+     for-all
+     fold-left
+     fold-right
      debug-print)
   (import (scheme)
 	  (only (chicken module)
@@ -186,6 +189,13 @@
     (if (pair? ell)
 	(loop combine (combine (car ell) nil) (cdr ell))
       nil)))
+
+(define (for-all pred ell)
+  (if (pair? ell)
+      (if (pred (car ell))
+	  (for-all pred (cdr ell))
+	#f)
+    #t))
 
 
 ;;;; miscellaneous

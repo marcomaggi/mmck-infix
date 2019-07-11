@@ -61,8 +61,11 @@
      (syntax: post-incr +)
      (syntax: post-decr -)
      factorial
-     !=)
+     !=
+     bitwise-arithmetic-shift-left
+     bitwise-arithmetic-shift-right)
   (import (scheme)
+	  (chicken bitwise)
 	  (mmck infix helpers))
   (import-for-syntax (scheme)
 		     (mmck infix helpers)
@@ -88,6 +91,12 @@
    (not (= arg1 arg2)))
   ((arg1 arg2 . arg*)
    (not (apply = arg1 arg2 arg*))))
+
+(define (bitwise-arithmetic-shift-left N1 N2)
+  (arithmetic-shift N1 N2))
+
+(define (bitwise-arithmetic-shift-right N1 N2)
+  (arithmetic-shift N1 (- N2)))
 
 
 ;;;; pre increment and decrement operators
@@ -117,7 +126,7 @@
 	     ,?id)))
 	((_ ?expr)
 	 (let ((%+	(rename '+)))
-	   `(,%+ ?expr 1)))
+	   `(,%+ ,?expr 1)))
 	(_
 	 (syntax-error 'pre-incr "invalid pre-increment operation" input-form.stx))))))
 
@@ -146,7 +155,7 @@
 	     ,?id)))
 	((_ ?expr)
 	 (let ((%-	(rename '-)))
-	   `(,%- ?expr 1)))
+	   `(,%- ,?expr 1)))
 	(_
 	 (syntax-error 'pre-decr "invalid pre-decrement operation" input-form.stx))))))
 
@@ -178,7 +187,7 @@
 	     (,%set! ,?id (,%+ ,?id 1)))))
 	((_ ?expr)
 	 (let ((%+	(rename '+)))
-	   `(,%+ ?expr 1)))
+	   `(,%+ ,?expr 1)))
 	(_
 	 (syntax-error 'post-incr "invalid post-increment operation" input-form.stx))))))
 
@@ -207,7 +216,7 @@
 	     (,%set! ,?id (,%- ,?id 1)))))
 	((_ ?expr)
 	 (let ((%-	(rename '-)))
-	   `(,%- ?expr 1)))
+	   `(,%- ,?expr 1)))
 	(_
 	 (syntax-error 'post-decr "invalid post-decrement operation" input-form.stx))))))
 
