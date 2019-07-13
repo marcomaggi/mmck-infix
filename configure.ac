@@ -2,7 +2,7 @@
 #
 
 AC_PREREQ([2.69])
-MMUX_PKG_VERSIONS([0],[1],[0],[devel.0])
+MMUX_PKG_VERSIONS([0],[1],[0],[devel.1])
 AC_INIT([MMCK Infix],[MMUX_PACKAGE_VERSION],
   [mrc.mgg@gmail.com],
   [mmck-infix],[http://github.com/marcomaggi/mmck-infix])
