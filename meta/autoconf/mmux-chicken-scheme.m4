@@ -48,7 +48,7 @@ AC_DEFUN([MMUX_CHICKEN_SCHEME],
 
    # Determine where shared libraries should be installed.
    #
-   AS_VAR_SET(MMUX_CHICKEN_LIBDIR,[${libdir}/chicken/9])
+   AS_VAR_SET(MMUX_CHICKEN_LIBDIR,[${libdir}/chicken/$mmux_cv_chicken_release_NUMBER])
    AC_MSG_NOTICE([CHICKEN libraries will be installed under: $MMUX_CHICKEN_LIBDIR])
    AC_SUBST([MMUX_CHICKEN_LIBDIR])
 
