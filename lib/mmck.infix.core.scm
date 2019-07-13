@@ -64,9 +64,12 @@
     ((syntax: infix))
   (import (scheme)
 	  (chicken fixnum)
+	  (chicken flonum)
 	  (mmck infix helpers)
 	  (mmck infix funcs))
   (import-for-syntax (scheme)
+		     (only (chicken syntax)
+			   er-macro-transformer)
 		     (chicken fixnum)
 		     (mmck infix helpers)
 		     (coops)
@@ -1049,6 +1052,15 @@
 (define DIV-TOKEN
   (make-<symmetric-left-assoc-infix-operator> (rename '/) MUL/DIV-BINDING-POWER))
 
+(define QUOTIENT-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'quotient) MUL/DIV-BINDING-POWER))
+
+(define MODULO-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'modulo) MUL/DIV-BINDING-POWER))
+
+(define REMAINDER-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'remainder) MUL/DIV-BINDING-POWER))
+
 ;; (define IDIV-TOKEN
 ;;   (make-<symmetric-left-assoc-infix-operator> (rename 'div) MUL/DIV-BINDING-POWER))
 
@@ -1087,34 +1099,37 @@
 (define FXMUL-TOKEN
   (make-<symmetric-left-assoc-infix-operator> (rename 'fx*) MUL/DIV-BINDING-POWER))
 
-;; (define FXDIV-TOKEN
-;;   (make-<symmetric-left-assoc-infix-operator> (rename 'fxdiv) MUL/DIV-BINDING-POWER))
+(define FXDIV-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'fx/) MUL/DIV-BINDING-POWER))
 
-;; (define FXMOD-TOKEN
-;;   (make-<symmetric-left-assoc-infix-operator> (rename 'fxmod) MOD-BINDING-POWER))
+(define FXNEG-TOKEN
+  (make-<prefix-operator> (rename 'fxneg) PLUS/MINUS-BINDING-POWER))
 
-;; (define FXDIV0-TOKEN
-;;   (make-<symmetric-left-assoc-infix-operator> (rename 'fxdiv0) MUL/DIV-BINDING-POWER))
+(define FXMOD-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'fxmod) MOD-BINDING-POWER))
 
-;; (define FXMOD0-TOKEN
-;;   (make-<symmetric-left-assoc-infix-operator> (rename 'fxmod0) MOD-BINDING-POWER))
+(define FXREM-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'fxrem) MOD-BINDING-POWER))
 
 ;;; --------------------------------------------------------------------
 
-;; (define FLPLUS-TOKEN
-;;   (make-<left-assoc-infix/prefix-operator> (rename 'fl+) PLUS/MINUS-BINDING-POWER PLUS/MINUS-BINDING-POWER))
+(define FLPLUS-TOKEN
+  (make-<left-assoc-infix/prefix-operator> (rename 'fp+) PLUS/MINUS-BINDING-POWER PLUS/MINUS-BINDING-POWER))
 
-;; (define FLMINUS-TOKEN
-;;   (make-<left-assoc-infix/prefix-operator> (rename 'fl-) PLUS/MINUS-BINDING-POWER PLUS/MINUS-BINDING-POWER))
+(define FLMINUS-TOKEN
+  (make-<left-assoc-infix/prefix-operator> (rename 'fp-) PLUS/MINUS-BINDING-POWER PLUS/MINUS-BINDING-POWER))
 
-;; (define FLMUL-TOKEN
-;;   (make-<symmetric-left-assoc-infix-operator> (rename 'fl*) MUL/DIV-BINDING-POWER))
+(define FLMUL-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'fp*) MUL/DIV-BINDING-POWER))
 
-;; (define FLDIV-TOKEN
-;;   (make-<symmetric-left-assoc-infix-operator> (rename 'fl/) MUL/DIV-BINDING-POWER))
+(define FLDIV-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'fp/) MUL/DIV-BINDING-POWER))
 
-;; (define FLEXPT-TOKEN
-;;   (make-<right-assoc-infix-operator> (rename 'flexpt) EXPT-LEFT-BINDING-POWER EXPT-RIGHT-BINDING-POWER))
+(define FLNEG-TOKEN
+  (make-<prefix-operator> (rename 'fpneg) PLUS/MINUS-BINDING-POWER))
+
+(define FLEXPT-TOKEN
+  (make-<right-assoc-infix-operator> (rename 'fpexpt) EXPT-LEFT-BINDING-POWER EXPT-RIGHT-BINDING-POWER))
 
 ;;; --------------------------------------------------------------------
 
@@ -1169,20 +1184,20 @@
 
 ;;; --------------------------------------------------------------------
 
-;; (define FLLESS-THAN-TOKEN
-;;   (make-<symmetric-left-assoc-infix-operator> (rename 'fl<) COMPARISON-BINDING-POWER))
+(define FLLESS-THAN-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'fp<) COMPARISON-BINDING-POWER))
 
-;; (define FLGREATER-THAN-TOKEN
-;;   (make-<symmetric-left-assoc-infix-operator> (rename 'fl>) COMPARISON-BINDING-POWER))
+(define FLGREATER-THAN-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'fp>) COMPARISON-BINDING-POWER))
 
-;; (define FLLESS-THAN-EQUAL-TO-TOKEN
-;;   (make-<symmetric-left-assoc-infix-operator> (rename 'fl<=) COMPARISON-BINDING-POWER))
+(define FLLESS-THAN-EQUAL-TO-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'fp<=) COMPARISON-BINDING-POWER))
 
-;; (define FLGREATER-THAN-EQUAL-TO-TOKEN
-;;   (make-<symmetric-left-assoc-infix-operator> (rename 'fl>=) COMPARISON-BINDING-POWER))
+(define FLGREATER-THAN-EQUAL-TO-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'fp>=) COMPARISON-BINDING-POWER))
 
-;; (define FLEQUAL-TO-TOKEN
-;;   (make-<symmetric-left-assoc-infix-operator> (rename 'fl=) COMPARISON-BINDING-POWER))
+(define FLEQUAL-TO-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'fp=) COMPARISON-BINDING-POWER))
 
 ;;; --------------------------------------------------------------------
 
@@ -1229,11 +1244,11 @@
 (define FXNOT-TOKEN
   (make-<prefix-operator> (rename 'fxnot) PREFIX-BITWISE-BINDING-POWER))
 
-(define FXSHIFT-LEFT-TOKEN
-  (make-<symmetric-left-assoc-infix-operator> (rename 'fxarithmetic-shift-left) INFIX-BITSHIFT-BINDING-POWER))
+(define FXSHL-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'fxshl) INFIX-BITSHIFT-BINDING-POWER))
 
-(define FXSHIFT-RIGHT-TOKEN
-  (make-<symmetric-left-assoc-infix-operator> (rename 'fxarithmetic-shift-right) INFIX-BITSHIFT-BINDING-POWER))
+(define FXSHR-TOKEN
+  (make-<symmetric-left-assoc-infix-operator> (rename 'fxshr) INFIX-BITSHIFT-BINDING-POWER))
 
 ;;; --------------------------------------------------------------------
 
@@ -1268,7 +1283,7 @@
 	   ((≠)		NOT-EQUAL-TO-TOKEN) ;;Unicode symbol "\x2260;".
 	   ((!)		BANG-TOKEN)
 	   ((**)	EXPT-TOKEN)
-	   ;;((%)		IMOD-TOKEN)
+	   ((%)		MODULO-TOKEN)
 	   ((×)		MUL-TOKEN) ;;Unicode symbol "\xD7;".
 	   ((⋅)		MUL-TOKEN) ;;Unicode symbol "\x22C5;".
 
@@ -1294,26 +1309,26 @@
 	      ((-)		MINUS-TOKEN)
 	      ((*)		MUL-TOKEN)
 	      ((/)		DIV-TOKEN)
-	      ;; ((div)		IDIV-TOKEN)
-	      ;; ((mod)		IMOD-TOKEN)
-	      ;; ((div0)		IDIV0-TOKEN)
-	      ;; ((mod0)		IMOD0-TOKEN)
+	      ((quotient)	QUOTIENT-TOKEN)
+	      ((modulo)		MODULO-TOKEN)
+	      ((remainder)	REMAINDER-TOKEN)
 	      ((expt)		EXPT-TOKEN)
 	      ((factorial)	FACTORIAL-TOKEN)
 
 	      ((fx+)		FXPLUS-TOKEN)
 	      ((fx-)		FXMINUS-TOKEN)
 	      ((fx*)		FXMUL-TOKEN)
-	      ;; ((fxdiv)		FXDIV-TOKEN)
-	      ;; ((fxmod)		FXMOD-TOKEN)
-	      ;; ((fxdiv0)		FXDIV0-TOKEN)
-	      ;; ((fxmod0)		FXMOD0-TOKEN)
+	      ((fx/)		FXDIV-TOKEN)
+	      ((fxneg)		FXNEG-TOKEN)
+	      ((fxmod)		FXMOD-TOKEN)
+	      ((fxrem)		FXREM-TOKEN)
 
-	      ;; ((fl+)		FLPLUS-TOKEN)
-	      ;; ((fl-)		FLMINUS-TOKEN)
-	      ;; ((fl*)		FLMUL-TOKEN)
-	      ;; ((fl/)		FLDIV-TOKEN)
-	      ;; ((flexpt)		FLEXPT-TOKEN)
+	      ((fp+)		FLPLUS-TOKEN)
+	      ((fp-)		FLMINUS-TOKEN)
+	      ((fp*)		FLMUL-TOKEN)
+	      ((fp/)		FLDIV-TOKEN)
+	      ((fpneg)		FLNEG-TOKEN)
+	      ((fpexpt)		FLEXPT-TOKEN)
 
 	      ((and)		AND-TOKEN)
 	      ((or)		OR-TOKEN)
@@ -1332,11 +1347,11 @@
 	      ((fx>=)		FXGREATER-THAN-EQUAL-TO-TOKEN)
 	      ((fx=)		FXEQUAL-TO-TOKEN)
 
-	      ;; ((fl<)		FLLESS-THAN-TOKEN)
-	      ;; ((fl>)		FLGREATER-THAN-TOKEN)
-	      ;; ((fl<=)		FLLESS-THAN-EQUAL-TO-TOKEN)
-	      ;; ((fl>=)		FLGREATER-THAN-EQUAL-TO-TOKEN)
-	      ;; ((fl=)		FLEQUAL-TO-TOKEN)
+	      ((fp<)		FLLESS-THAN-TOKEN)
+	      ((fp>)		FLGREATER-THAN-TOKEN)
+	      ((fp<=)		FLLESS-THAN-EQUAL-TO-TOKEN)
+	      ((fp>=)		FLGREATER-THAN-EQUAL-TO-TOKEN)
+	      ((fp=)		FLEQUAL-TO-TOKEN)
 
 	      ((eq?)		EQ-PRED-TOKEN)
 	      ((eqv?)		EQV-PRED-TOKEN)
@@ -1355,8 +1370,8 @@
 	      ((fxior)				FXIOR-TOKEN)
 	      ((fxxor)				FXXOR-TOKEN)
 	      ((fxnot)				FXNOT-TOKEN)
-	      ((fxarithmetic-shift-left)	FXSHIFT-LEFT-TOKEN)
-	      ((fxarithmetic-shift-right)	FXSHIFT-RIGHT-TOKEN)
+	      ((fxshl)				FXSHL-TOKEN)
+	      ((fxshr)				FXSHR-TOKEN)
 
 	      (else
 	       ;;It is a variable.

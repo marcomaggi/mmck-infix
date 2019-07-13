@@ -34,6 +34,7 @@
   (import (scheme)
 	  (chicken base)
 	  (chicken fixnum)
+	  (chicken flonum)
 	  (chicken bitwise)
 	  (mmck infix)
 	  (mmck checks))
@@ -131,9 +132,12 @@
   (check (infix (1 + (- a)))	=> (+ 1 (- 2)))
   #f)
 
-;; (check (infix 1 % 3)		=> (mod 1 3))
-;; (check (infix 10 mod 3)		=> (mod 10 3))
-;; (check (infix 1 div 3)		=> (div 1 3))
+(check (infix 1 % 3)		=> (modulo 1 3))
+(check (infix 10 modulo 3)	=> (modulo 10 3))
+
+(check (infix 1 quotient 3)	=> (quotient 1 3))
+(check (infix 10 remainder 3)	=> (remainder 10 3))
+
 (check (infix 1 expt 3)		=> (expt 1 3))
 (check (infix 10 expt 3)	=> (expt 10 3))
 
@@ -244,6 +248,10 @@
 
   (check
       (infix (fun (1 , 2 , 3)))
+    => (fun 1 2 3))
+
+  (check
+      (infix fun(1, 2, 3))
     => (fun 1 2 3))
 
   (values))
@@ -372,7 +380,7 @@
 ;;This is fine with  Pratt but fails with LALR because LALR does  not allow ! to have
 ;;difference precedences when present in prefix and postfix positions.
 ;;
-;;(check (infix ! 1 + 2)		=> #f)
+(check (infix ! 1 + 2)		=> #f)
 
 (check (infix 1 && 3)		=> 3)
 (check (infix #f && 3)		=> #f)
@@ -445,24 +453,22 @@
 (check (infix 1 fx* 2 fx+ 3)		=> (fx+ (fx* 1 2) 3))
 (check (infix 1 fx* 2 fx- 3)		=> (fx- (fx* 1 2) 3))
 
-;;No unary FX-!!!
-;;(check (infix fx- 2)			=> (fx- 2))
-;;(check (infix (fx- 2))			=> (fx- 2))
-#;(check (infix (1 fx+ (fx- 2)))		=> (fx+ 1 (fx- 2)))
-#;(let ((a 2))
-  (check (infix (fx- a))		=> (fx- 2))
-  (check (infix (1 fx+ (fx- a)))	=> (fx+ 1 (fx- 2)))
+(check (infix fxneg 2)			=> (fxneg 2))
+(check (infix (fxneg 2))		=> (fxneg 2))
+(check (infix (1 fx+ (fxneg 2)))	=> (fx+ 1 (fxneg 2)))
+(let ((a 2))
+  (check (infix (fxneg a))		=> (fxneg 2))
+  (check (infix (1 fx+ (fxneg a)))	=> (fx+ 1 (fxneg 2)))
   #f)
 
-;; (check (infix 1 fxdiv 3)		=> (fxdiv 1 3))
-;; (check (infix 1 fxmod 3)		=> (fxmod 1 3))
-;; (check (infix 10 fxmod 3)		=> (fxmod 10 3))
+(check (infix 1 fx/ 3)			=> (fx/ 1 3))
+(check (infix 1 fxmod 3)		=> (fxmod 1 3))
+(check (infix 10 fxmod 3)		=> (fxmod 10 3))
 
 ;;; associativity
 
 (check (infix 10 fx- 5 fx- 3)		=> (fx- (fx- 10 5) 3))
-;; (check (infix 10 fxdiv 5 fxdiv 3)	=> (fxdiv (fxdiv 10 5) 3))
-;; (check (infix 10 fxdiv0 5 fxdiv0 3)	=> (fxdiv0 (fxdiv0 10 5) 3))
+(check (infix 10 fx/ 5 fx/ 3)		=> (fx/ (fx/ 10 5) 3))
 
 ;;; comparison operators
 
@@ -472,70 +478,95 @@
 (check (infix 1 fx>= 3)			=> (fx>= 1 3))
 (check (infix 1 fx= 3)			=> (fx=  1 3))
 
+;; bitwise operations
+
+(let ((a #b0101) (b #b1111))
+  (check
+      (infix a fxand b)
+    => (fxand a b)))
+
+(let ((a #b0101) (b #b1101))
+  (check
+      (infix a fxior b)
+    => (fxior a b)))
+
+(let ((a #b0111) (b #b1101))
+  (check
+      (infix a fxxor b)
+    => (fxxor a b)))
+
+(let ((a #b0101))
+  (check
+      (infix fxnot a)
+    => (fxnot a)))
+
+(let ((a #b0111) (b 3))
+  (check
+      (infix a fxshl b)
+    => (fxshl a b)))
+
+(let ((a #b01110000) (b 3))
+  (check
+      (infix a fxshr b)
+    => (fxshr a b)))
+
 
 ;;;; flonums
 
-#|
-
 ;;; arithmetic operators
 
-(check (infix 1. fl+ 2.)		=> (fl+ 1. 2.))
-(check (infix 1. fl+ 2. fl+ 3.)		=> (fl+ (fl+ 1. 2.) 3.))
-(check (infix 1. fl+ 2. fl- 3.)		=> (fl- (fl+ 1. 2.) 3.))
-(check (infix 1. fl+ (2. fl+ 3.))	=> (fl+ 1. (fl+ 2. 3.)))
-(check (infix 1. fl+ (2. fl- 3.))	=> (fl+ 1. (fl- 2. 3.)))
+(check (infix 1. fp+ 2.)		=> (fp+ 1. 2.))
+(check (infix 1. fp+ 2. fp+ 3.)		=> (fp+ (fp+ 1. 2.) 3.))
+(check (infix 1. fp+ 2. fp- 3.)		=> (fp- (fp+ 1. 2.) 3.))
+(check (infix 1. fp+ (2. fp+ 3.))	=> (fp+ 1. (fp+ 2. 3.)))
+(check (infix 1. fp+ (2. fp- 3.))	=> (fp+ 1. (fp- 2. 3.)))
 
-(check (infix 1. fl* 1.)		=> (fl* 1. 1.))
-(check (infix 1. fl* 2. fl* 3.)		=> (fl* (fl* 1. 2.) 3.))
-(check (infix 1. fl* 2. fl/ 3.)		=> (fl/ (fl* 1. 2.) 3.))
-(check (infix 1. fl* (2. fl* 3.))	=> (fl* 1. (fl* 2. 3.)))
-(check (infix 1. fl* (2. fl/ 3.))	=> (fl* 1. (fl/ 2. 3.)))
+(check (infix 1. fp* 1.)		=> (fp* 1. 1.))
+(check (infix 1. fp* 2. fp* 3.)		=> (fp* (fp* 1. 2.) 3.))
+(check (infix 1. fp* 2. fp/ 3.)		=> (fp/ (fp* 1. 2.) 3.))
+(check (infix 1. fp* (2. fp* 3.))	=> (fp* 1. (fp* 2. 3.)))
+(check (infix 1. fp* (2. fp/ 3.))	=> (fp* 1. (fp/ 2. 3.)))
 
-(check (infix 1. fl+ 2. fl* 3.)		=> (fl+ 1. (fl* 2. 3.)))
-(check (infix 1. fl- 2. fl* 3.)		=> (fl- 1. (fl* 2. 3.)))
-(check (infix 1. fl+ 2. fl/ 3.)		=> (fl+ 1. (fl/ 2. 3.)))
-(check (infix 1. fl- 2. fl/ 3.)		=> (fl- 1. (fl/ 2. 3.)))
+(check (infix 1. fp+ 2. fp* 3.)		=> (fp+ 1. (fp* 2. 3.)))
+(check (infix 1. fp- 2. fp* 3.)		=> (fp- 1. (fp* 2. 3.)))
+(check (infix 1. fp+ 2. fp/ 3.)		=> (fp+ 1. (fp/ 2. 3.)))
+(check (infix 1. fp- 2. fp/ 3.)		=> (fp- 1. (fp/ 2. 3.)))
 
-(check (infix 1. fl* 2. fl+ 3.)		=> (fl+ (fl* 1. 2.) 3.))
-(check (infix 1. fl* 2. fl- 3.)		=> (fl- (fl* 1. 2.) 3.))
-(check (infix 1. fl/ 2. fl+ 3.)		=> (fl+ (fl/ 1. 2.) 3.))
-(check (infix 1. fl/ 2. fl- 3.)		=> (fl- (fl/ 1. 2.) 3.))
+(check (infix 1. fp* 2. fp+ 3.)		=> (fp+ (fp* 1. 2.) 3.))
+(check (infix 1. fp* 2. fp- 3.)		=> (fp- (fp* 1. 2.) 3.))
+(check (infix 1. fp/ 2. fp+ 3.)		=> (fp+ (fp/ 1. 2.) 3.))
+(check (infix 1. fp/ 2. fp- 3.)		=> (fp- (fp/ 1. 2.) 3.))
 
 ;; left associativity
-(check (infix 10. fl- 5. fl- 3.)	=> (fl- (fl- 10. 5.) 3.))
-(check (infix 10. fl- 5. fl- 3.)	=> (fl- 10. 5. 3.))
-(check (infix 10. fl/ 5. fl/ 3.)	=> (fl/ (fl/ 10. 5.) 3.))
-(check (infix 10. fl/ 5. fl/ 3.)	=> (fl/ 10. 5. 3.))
+(check (infix 10. fp- 5. fp- 3.)	=> (fp- (fp- 10. 5.) 3.))
+(check (infix 10. fp/ 5. fp/ 3.)	=> (fp/ (fp/ 10. 5.) 3.))
 
-(check (infix fl- 2.)			=> (fl- 2.))
-(check (infix (fl- 2.))			=> (fl- 2.))
-(check (infix (1. fl+ (fl- 2.)))	=> (fl+ 1. (fl- 2.)))
+(check (infix fpneg 2.)			=> (fpneg 2.))
+(check (infix (fpneg 2.))			=> (fpneg 2.))
+(check (infix (1. fp+ (fpneg 2.)))	=> (fp+ 1. (fpneg 2.)))
 (let ((a 2.))
-  (check (infix (fl- a))		=> (fl- 2.))
-  (check (infix (1. fl+ (fl- a)))	=> (fl+ 1. (fl- 2.)))
+  (check (infix (fpneg a))		=> (fpneg 2.))
+  (check (infix (1. fp+ (fpneg a)))	=> (fp+ 1. (fpneg 2.)))
   #f)
 
-(check (infix 1.0 flexpt 3.)		=> (flexpt 1.0 3.))
-;; FLEXPT is right-associative
-(check (infix 10. flexpt 5. flexpt 3.)	=> (flexpt 10. (flexpt 5. 3.)))
+(check (infix 1.0 fpexpt 3.)		=> (fpexpt 1.0 3.))
+;; FPEXPT is right-associative
+(check (infix 10. fpexpt 5. fpexpt 3.)	=> (fpexpt 10. (fpexpt 5. 3.)))
 
 ;;; comparison operators
 
-(check (infix 1. fl< 3.)		=> (fl<  1. 3.))
-(check (infix 1. fl> 3.)		=> (fl>  1. 3.))
-(check (infix 1. fl<= 3.)		=> (fl<= 1. 3.))
-(check (infix 1. fl>= 3.)		=> (fl>= 1. 3.))
-(check (infix 1. fl= 3.)		=> (fl=  1. 3.))
-
-|#
+(check (infix 1. fp< 3.)		=> (fp<  1. 3.))
+(check (infix 1. fp> 3.)		=> (fp>  1. 3.))
+(check (infix 1. fp<= 3.)		=> (fp<= 1. 3.))
+(check (infix 1. fp>= 3.)		=> (fp>= 1. 3.))
+(check (infix 1. fp= 3.)		=> (fp=  1. 3.))
 
 
 ;;;; precedence
 
 ;;;In order of increasing precedence from left to right:
 ;;;
-;;; + - * / div div0 mod mod0 expt < > <= >= =
-
+;;; + - * / quotient modulo expt < > <= >= =
 
 (check (infix 11 + 22 * 33)		=> (+ 11 (* 22 33)))
 (check (infix 11 - 22 * 33)		=> (- 11 (* 22 33)))
@@ -549,39 +580,15 @@
 
 ;;; --------------------------------------------------------------------
 
-;; (check (infix 11 + 22 div 33)		=> (+ 11 (div 22 33)))
-;; (check (infix 11 - 22 div 33)		=> (- 11 (div 22 33)))
-;; (check (infix 22 div 33 + 11)		=> (+ (div 22 33) 11))
-;; (check (infix 22 div 33 - 11)		=> (- (div 22 33) 11))
+(check (infix 11 + 22 quotient 33)		=> (+ 11 (quotient 22 33)))
+(check (infix 11 - 22 quotient 33)		=> (- 11 (quotient 22 33)))
+(check (infix 22 quotient 33 + 11)		=> (+ (quotient 22 33) 11))
+(check (infix 22 quotient 33 - 11)		=> (- (quotient 22 33) 11))
 
-;; (check (infix 11 + 22 mod 33)		=> (+ 11 (mod 22 33)))
-;; (check (infix 11 - 22 mod 33)		=> (- 11 (mod 22 33)))
-;; (check (infix 22 mod 33 + 11)		=> (+ (mod 22 33) 11))
-;; (check (infix 22 mod 33 - 11)		=> (- (mod 22 33) 11))
-
-;;; --------------------------------------------------------------------
-
-;; (check (infix 11 + 22 div0 33)		=> (+ 11 (div0 22 33)))
-;; (check (infix 11 - 22 div0 33)		=> (- 11 (div0 22 33)))
-;; (check (infix 22 div0 33 + 11)		=> (+ (div0 22 33) 11))
-;; (check (infix 22 div0 33 - 11)		=> (- (div0 22 33) 11))
-
-;; (check (infix 11 + 22 mod0 33)		=> (+ 11 (mod0 22 33)))
-;; (check (infix 11 - 22 mod0 33)		=> (- 11 (mod0 22 33)))
-;; (check (infix 22 mod0 33 + 11)		=> (+ (mod0 22 33) 11))
-;; (check (infix 22 mod0 33 - 11)		=> (- (mod0 22 33) 11))
-
-;;MUL and  DIV categories  have the  same precedence, so  it is  left to
-;;right here:
-;; (check (infix 11 * 22 div0 33)		=> (div0 (* 11 22) 33))
-;; (check (infix 11 / 22 div0 33)		=> (div0 (/ 11 22) 33))
-;; (check (infix 22 div0 33 * 11)		=> (* (div0 22 33) 11))
-;; (check (infix 22 div0 33 / 11)		=> (/ (div0 22 33) 11))
-
-;; (check (infix 11 * 22 mod0 33)		=> (* 11 (mod0 22 33)))
-;; (check (infix 11 / 22 mod0 33)		=> (/ 11 (mod0 22 33)))
-;; (check (infix 22 mod0 33 * 11)		=> (* (mod0 22 33) 11))
-;; (check (infix 22 mod0 33 / 11)		=> (/ (mod0 22 33) 11))
+(check (infix 11 + 22 modulo 33)		=> (+ 11 (modulo 22 33)))
+(check (infix 11 - 22 modulo 33)		=> (- 11 (modulo 22 33)))
+(check (infix 22 modulo 33 + 11)		=> (+ (modulo 22 33) 11))
+(check (infix 22 modulo 33 - 11)		=> (- (modulo 22 33) 11))
 
 ;;; --------------------------------------------------------------------
 
@@ -595,10 +602,10 @@
 (check (infix 22 expt 33 * 11)		=> (* (expt 22 33) 11))
 (check (infix 22 expt 33 / 11)		=> (/ (expt 22 33) 11))
 
-;; (check (infix 11 div 22 expt 33)	=> (div 11 (expt 22 33)))
-;; (check (infix 11 mod 22 expt 33)	=> (mod 11 (expt 22 33)))
-;; (check (infix 22 expt 33 div 11)	=> (div (expt 22 33) 11))
-;; (check (infix 22 expt 33 mod 11)	=> (mod (expt 22 33) 11))
+(check (infix 11 quotient 22 expt 33)	=> (quotient 11 (expt 22 33)))
+(check (infix 11 modulo 22 expt 33)	=> (modulo 11 (expt 22 33)))
+(check (infix 22 expt 33 quotient 11)	=> (quotient (expt 22 33) 11))
+(check (infix 22 expt 33 modulo 11)	=> (modulo (expt 22 33) 11))
 
 ;;; --------------------------------------------------------------------
 

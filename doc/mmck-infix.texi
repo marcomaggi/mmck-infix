@@ -200,7 +200,7 @@ the library and import its syntactic bindings in a module we can do:
 (module (my-module)
     ()
   (import (scheme)
-    (mmck infix))
+          (mmck infix))
 
   ...
 
@@ -297,7 +297,7 @@ version is @samp{1.2.3-devel.0+x86-64}: the package version is the string
 @chapter Infix to prefix transformer
 
 
-The following bindings are exported by the library @library{infix pratt}.
+The following syntactic bindings are exported by the library @library{mmck infix}.
 
 
 @deffn Syntax infix @meta{obj} @dots{}
@@ -319,6 +319,17 @@ to @code{(values)}.
 @section Notes on the supported syntax
 
 
+Let's consider that the library @library{mmck infix} exports the following extension functions and
+syntaxes:
+
+@lisp
+xor
+factorial
+!=
+bitwise-arithmetic-shift-left
+bitwise-arithmetic-shift-right
+@end lisp
+
 Some expression syntax interpretation rules:
 
 @itemize
@@ -327,36 +338,35 @@ Any Scheme value can be element of the input form; numbers and all the other val
 there as operands.
 
 @example
-(infix list("ciao" , 'hello , '#vu8(1 2 3 4)))
-@result{} ("ciao" hello #vu8(1 2 3 4))
+(infix list("ciao" , 'hello , '#u8(1 2 3 4)))
+@result{} ("ciao" hello #u8(1 2 3 4))
 @end example
 
 @item
-The following bound identifiers exported by @library{rnrs (6)} are interpreted as binary infix
-operators:
+The following bound identifiers exported by @library{scheme}, @library{chicken fixnum},
+@library{chicken flonum} and @library{chicken bitwise} are interpreted as binary infix operators:
 
 @example
-+ - * / div div0 mod mod0 expt
-fl+ fl- fl* fl/ flexpt
-fx+ fx- fx* fxdiv fxdiv0 fxmod fxmod0
++ - * / expt quotient modulo remainder
+fx+ fx- fx* fx/ fxmod fxrem
+fp+ fp- fp* fp/ fpexpt
 < > <= >= =
-fx<? fx>? fx<=? fx>=? fx=?
-fl<? fl>? fl<=? fl>=? fl=?
+fx< fx> fx<= fx>= fx=
+fp< fp> fp<= fp>= fp=
 eq? eqv? equal?
 and or
 bitwise-and bitwise-ior bitwise-xor
-bitwise-arithmetic-shift-left
-bitwise-arithmetic-shift-right
-fxand fxior fxxor
-fxarithmetic-shift-left
-fxarithmetic-shift-right
+fxand fxior fxxor fxshl fxshr
 @end example
 
 @noindent
-the following bound identifiers exported by this library are interpreted as binary infix operators:
+the following bound identifiers exported by @library{mmck infix} are interpreted as binary infix
+operators:
 
 @example
 != xor
+bitwise-arithmetic-shift-left
+bitwise-arithmetic-shift-right
 @end example
 
 @noindent
@@ -388,42 +398,55 @@ where the symbols with escape sequences are:
 
 @table @samp
 @item \x00AC;
+@itemx @U{00AC}
 Unicode character not sign.
 
 @item \x00D7;
+@itemx @U{00D7}
 Unicode character times.
 
 @item \x2227;
+@itemx @U{2227}
 Unicode character logical and.
 
 @item \x2228;
+@itemx @U{2228}
 Unicode character logical or.
 
 @item \x22BB;
+@ifnottex
+@itemx @U{22BB}
+@end ifnottex
 Unicode character xor.
 
 @item \x22C5;
+@itemx @U{22C5}
 Unicode character dot operator.
 
 @item \x23D0;
+@ifnottex
+@itemx @U{23D0}
+@end ifnottex
 Unicode character vertical bar extension.
 @end table
 
 @item
-The following bound identifiers exported by @library{rnrs (6)} are interpreted as unary prefix
-operators:
+The following bound identifiers exported by @library{scheme}, @library{chicken fixnum} and
+@library{chicken flonum} are interpreted as unary prefix operators:
 
 @example
 + -
-fx+ fx- fl+ fl-
+fx+ fx- fxneg
+fp+ fp- fpneg
 not bitwise-not fxnot
 @end example
 
 @noindent
-the following bound identifiers exported by this library are interpreted as unary prefix operators:
+the following identifiers are recognised by their symbol name and are interpreted as unary prefix
+operators:
 
 @example
-incr! decr!
+++ --
 @end example
 
 @noindent
@@ -436,10 +459,11 @@ of unary prefix operators:
 @end example
 
 @item
-The following bound identifiers exported by this library are interpreted as unary postfix operators:
+The following identifiers are recognised by their symbol namd and are are interpreted as unary
+postfix operators:
 
 @example
-incr! decr!
+++ --
 @end example
 
 @noindent
@@ -452,7 +476,7 @@ of unary postfix operators:
 
 @item
 Almost all the binary infix operators are left--associative with the exception of @func{expt} and
-@func{flexpt} which are right--associative:
+@func{fpexpt} which are right--associative:
 
 @example
 ;; left-associative
@@ -463,51 +487,52 @@ Almost all the binary infix operators are left--associative with the exception o
 
 ;; right-associative
 (infix 10 expt 5 expt 3)        @expansion{} (expt 10 (expt 5 3))
+(infix 10. fpexpt 5. fpexpt 3.) @expansion{} (fpexpt 10. (fpexpt 5. 3.))
 @end example
 
 @item
-The identifiers @func{incr!} and @func{decr!} are unary operators that can be applied to expressions
+The identifiers @func{++} and @func{--} are unary operators that can be applied to expressions
 both in prefix and postfix positions.  When applied in prefix position to an identifier,
-@func{incr!} expands to:
+@func{++} expands to:
 
 @example
-(infix incr! ?id) @expansion{} (begin (set! ?id (+ ?id 1)) ?id)
+(infix ++ ?id) @expansion{} (begin (set! ?id (+ ?id 1)) ?id)
 @end example
 
 @noindent
-and @func{decr!} expands to:
+and @func{--} expands to:
 
 @example
-(infix decr! ?id) @expansion{} (begin (set! ?id (- ?id 1)) ?id)
+(infix -- ?id) @expansion{} (begin (set! ?id (- ?id 1)) ?id)
 @end example
 
-When applied in postfix position to an identifier, @func{incr!} expands to:
+When applied in postfix position to an identifier, @func{++} expands to:
 
 @example
-(infix ?id incr!) @expansion{} (let ((v ?id)) (set! ?id (+ ?id 1)) v)
+(infix ?id ++) @expansion{} (let ((v ?id)) (set! ?id (+ ?id 1)) v)
 @end example
 
 @noindent
-and @func{decr!} expands to:
+and @func{--} expands to:
 
 @example
-(infix ?id decr!) @expansion{} (let ((v ?id)) (set! ?id (- ?id 1)) v)
+(infix ?id --) @expansion{} (let ((v ?id)) (set! ?id (- ?id 1)) v)
 @end example
 
-When applied to a non--identifier expression, both in prefix and postfix position, @func{incr!}
+When applied to a non--identifier expression, both in prefix and postfix position, @func{++}
 expands to:
 
 @example
-(infix incr! ?expr)     @expansion{} (+ ?expr 1)
-(infix ?expr incr!)     @expansion{} (+ ?expr 1)
+(infix ++ ?expr)     @expansion{} (+ ?expr 1)
+(infix ?expr ++)     @expansion{} (+ ?expr 1)
 @end example
 
 @noindent
-and @func{decr!} expands to:
+and @func{--} expands to:
 
 @example
-(infix decr! ?expr)     @expansion{} (- ?expr 1)
-(infix ?expr decr!)     @expansion{} (- ?expr 1)
+(infix -- ?expr)     @expansion{} (- ?expr 1)
+(infix ?expr --)     @expansion{} (- ?expr 1)
 @end example
 
 @item
@@ -531,7 +556,8 @@ using the comma as separator.
 (define (fun a b c)
   (+ a b c))
 
-(infix fun (1 , 2 , 3))   @expansion{} (fun 1 2 3)
+(infix fun (1 , 2 , 3)) @expansion{} (fun 1 2 3)
+(infix fun(1, 2, 3))    @expansion{} (fun 1 2 3)
 @end example
 
 @quotation
@@ -554,27 +580,15 @@ so the list of arguments is:
 @example
 ( @metai{arg} (unsyntax @meta{arg}) ... )
 @end example
-
-@rnrs{6} does not define the comma to be a delimiter, so writing:
-
-@example
-func (@metai{arg}, @meta{arg}, ...)
-@end example
-
-@noindent
-with no space between the @meta{arg} and the comma is a syntax error in strict @rnrs{6}
-implementations.
 @end quotation
 
 @item
-The identifiers @func{quote}, @func{quasiquote}, @func{syntax} and @func{quasisyntax} are not
-subject to infix to prefix conversion; the use of such syntaxes just expands to the prefix object:
+The identifiers @func{quote} and @func{quasiquote} are not subject to infix to prefix conversion;
+the use of such syntaxes just expands to the prefix object:
 
 @example
 (infix (quote       ciao))  @expansion{} (quote ciao)
 (infix (quasiquote  ciao))  @expansion{} (quasiquote ciao)
-(infix (syntax      ciao))  @expansion{} (syntax ciao)
-(infix (quasisyntax ciao))  @expansion{} (quasisyntax ciao)
 @end example
 
 @item
@@ -629,8 +643,8 @@ Binary infix bitwise shift operators:
 @example
 bitwise-arithmetic-shift-left
 bitwise-arithmetic-shift-right
-fxarithmetic-shift-left
-fxarithmetic-shift-right
+fxshl
+fxshr
 @end example
 
 @item
@@ -652,42 +666,42 @@ fxand fxior fxxor
 Unary prefix arithmetic operators:
 
 @example
-+ - incr! decr! fx+ fx- fl+ fl-
++ - ++ -- fx+ fx- fp+ fp-
 @end example
 
 @item
 Unary postfix arithmetic operators:
 
 @example
-incr! decr! !
+++ -- !
 @end example
 
 @item
 Binary infix arithmetic exponentiation operators:
 
 @example
-expt flexpt
+expt fpexpt
 @end example
 
 @item
 Binary infix arithmetic modulo operators:
 
 @example
-mod mod0 fxmod fxmod0
+quotient modulo remainder
 @end example
 
 @item
 Binary infix multiplication and division arithmetic operators:
 
 @example
-* / div div0 fl* fl/ fx* fxdiv fxdiv0
+* / fp* fp/ fx* fx/
 @end example
 
 @item
 Binary infix addition and subtraction arithmetic operators:
 
 @example
-+ - fl+ fl- fx+ fx-
++ - fp+ fp- fx+ fx-
 @end example
 
 @item
@@ -695,8 +709,8 @@ Comparison operators:
 
 @example
 < > <= >= = !=
-fx<? fx>? fx<=? fx>=? fx=?
-fl<? fl>? fl<=? fl>=? fl=?
+fx< fx> fx<= fx>= fx=
+fp< fp> fp<= fp>= fp=
 eq? eqv? equal?
 @end example
 
@@ -727,8 +741,8 @@ Here some expansion examples:
 (infix ! 2 + 3)         @expansion{} (not (2 + 3))
 (infix (! 2) + 3)       @error{} expected numeric argument
 
-(infix fxnot 3)         @result{} -3
-(infix fxnot 3 + 10)    @result{} 7
+(infix fxnot 3)         @result{} -4
+(infix fxnot 3 + 10)    @result{} 6
 
 (infix ! cos(3))        @expansion{} (not (cos 3))
 @end example
@@ -739,8 +753,7 @@ Here some expansion examples:
 
 
 The Pratt parser allows the same operator to have different precedence when it is present in prefix
-position or in post fix position.  So under @library{infix pratt} the following expansion takes
-place:
+position or in postfix position.  So under @library{mmck infix} the following expansion takes place:
 
 @example
 (infix ! 1 + 2)         @expansion{} (not (+ 1 2))
@@ -767,22 +780,15 @@ The C language has established a tradition of interpreting the single vertical b
 bitwise inclusive OR operator and the double vertical bar as @samp{||} as logical inclusive OR
 operator.
 
-In the @rnrs{6} Scheme language the vertical bar is used in the block comments delimiters @samp{#|
-@dots{} |#}.  Some text editors for software programmers handle the vertical bar specially in Scheme
-mode, in particular for syntax highlighting.
+In the Scheme language the vertical bar is used in the block comments delimiters @samp{#| @dots{}
+|#}.  Some text editors for software programmers handle the vertical bar specially in Scheme mode,
+in particular for syntax highlighting.
 
 It would be possible to extend the Scheme reader to allow @samp{|} and @samp{||} to be symbols, but,
 at present, this confuses some text editors in a way that is not easy to fix.  So, for now, rather
 than the vertical bar, @func{infix} recognises the Unicode character vertical bar extension
 (@samp{\x23D0;}) as bitwise inclusive OR and the double vertical bar extension as logical inclusive
 OR.
-
-@c ------------------------------------------------------------
-
-@subsubheading About the unary increment and decrement operators
-
-The identifiers @func{++} and @func{--} would be better choices than @func{incr!} and @func{decr!},
-but @func{++} and @func{--} are not valid identifiers according to @rnrs{6}.
 
 @c page
 @c ------------------------------------------------------------
