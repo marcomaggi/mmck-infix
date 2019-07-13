@@ -5,11 +5,32 @@ include meta/automake/mmck-rules.make
 
 #### documentation
 
+EXTRA_DIST		+= doc/mmck-chicken-docs.style.css
+CLEANFILES		+= doc/mmck-chicken-docs.css
+AM_MAKEINFOHTMLFLAGS	+= --css-ref=mmck-chicken-docs.css
+
 info_TEXINFOS		= doc/mmck-infix.texi
 doc_mmck_infix_TEXINFOS = \
 	doc/macros.texi			\
 	doc/lgpl-3.0.texi		\
 	doc/fdl-1.3.texi
+
+## --------------------------------------------------------------------
+
+doc/mmck-infix.html/$(am__dirstamp): doc/$(am__dirstamp)
+	@$(MKDIR_P) doc/mmck-infix.html/
+	@: > doc/mmck-infix.html/$(am__dirstamp)
+
+doc/mmck-infix.html/mmck-chicken-docs.css: doc/mmck-chicken-docs.style.css doc/mmck-infix.html/$(am__dirstamp)
+	$(INSTALL) -m 0444 "$(top_srcdir)/doc/mmck-chicken-docs.style.css" "$(builddir)/doc/mmck-infix.html/mmck-chicken-docs.css"
+
+## --------------------------------------------------------------------
+
+html-local: doc/mmck-infix.html/mmck-chicken-docs.css
+
+install-html-local:
+	$(MKDIR_P) "$(DESTDIR)$(htmldir)/mmck-infix.html/"
+	$(INSTALL) -m 0444 $(builddir)/doc/mmck-infix.html/mmck-chicken-docs.css "$(DESTDIR)$(htmldir)/mmck-infix.html/"
 
 
 #### library build targets
